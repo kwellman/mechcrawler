@@ -23,3 +23,11 @@ Example::
     br['username'] = 'username'
     br['password'] = 'password'
     br.submit()
+
+Requirements
+------------
+
+Mechanize::
+    
+   easy_install mechanize
+
