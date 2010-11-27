@@ -16,7 +16,7 @@ class CrawlBrowser(TestBrowser):
         #self.excludes = [re.compile(exclude) for exclude in excludes]
         self.crawl_errors = []
 
-        super(CrawlBrowser, self).__init__(self)
+        TestBrowser.__init__(self)
 
     def links(self, **kwds):
         """Add source attribute to link objects to keep track of the link

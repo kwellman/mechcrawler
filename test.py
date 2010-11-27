@@ -34,7 +34,7 @@ class TestBrowser(mechanize.Browser):
     """Subclass of mechanize's Browser with added methods useful for testing.
     """
     def __init__(self, *args, **kwargs):
-        super(TestBrowser, self).__init__(self, *args, **kwargs)
+        mechanize.Browser.__init__(self, *args, **kwargs)
 
         self.set_useragent(pattern='firefox')
 
