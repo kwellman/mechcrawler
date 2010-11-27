@@ -109,7 +109,7 @@ class TestBrowser(mechanize.Browser):
         """Allow selection based on "action" and/or "method" attributes.
         """
         try:
-            return super(TestBrowser, self).select_form(self, name=name, predicate=predicate, nr=nr)
+            return mechanize.Browser.select_form(self, name=name, predicate=predicate, nr=nr)
         except (ValueError, mechanize.FormNotFoundError), e:
             for form in self.forms():
                 if id and not form.attrs.get('id') == id:
