@@ -1,5 +1,6 @@
 import re, time
 from collections import deque
+from urlparse import urlparse
 import mechanize
 from test import TestBrowser
 
@@ -10,10 +11,19 @@ class CrawlBrowser(TestBrowser):
     all the links of a site.
     """
     def __init__(self, domain=None, includes=[], excludes=[], pause=None, max_links=300):
-        self.domain = domain
+        if not domain is None:
+            d = urlparse(domain)
+            if d.netloc:
+                self.domain = d.netloc
+            else:
+                self.domain = d.path.strip('/')
+        else:
+            self.domain = domain
+
         self.includes = [re.compile(include) for include in includes]
         self.excludes = [re.compile(exclude) for exclude in excludes]
         self.pause = pause
+        self.max_links = max_links
 
         self.reset()
 
@@ -28,7 +38,7 @@ class CrawlBrowser(TestBrowser):
         """Add source attribute to link objects to keep track of the link
         origin.
         """
-        links = list(super(CrawlBrowser, self).links(self, **kwds))
+        links = list(TestBrowser.links(self, **kwds))
 
         for link in links:
             link.source = self.geturl()
@@ -89,10 +99,9 @@ class CrawlBrowser(TestBrowser):
             # an error has occured
             return result
 
-        # TODO: only add links if url in domain (use urlparse for this)
-        pass
-
-        self.todo_links.extend(self.links())
+        #  only add links if url in domain
+        if self.domain is None or urlparse(self.geturl()).netloc == self.domain:
+            self.todo_links.extend(self.links())
 
     def report_error(self, link, result):
         print
@@ -102,9 +111,15 @@ class CrawlBrowser(TestBrowser):
 
         self.crawl_errors.append((link.source, link, result))
 
+    def errors(self):
+        return self.crawl_errors
+
     def crawl(self, start_url=None):
         if not start_url:
-            start_url = self.geturl()
+            if self.domain:
+                start_url = 'http://%s' % self.domain
+            else:
+                start_url = self.geturl()
 
         self.todo_links.append(mechanize.Link(start_url, '', None, '', {}))
 
