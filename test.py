@@ -2,8 +2,6 @@ import re, random, time, urllib2, httplib
 from fnmatch import fnmatch
 import mechanize
 
-# TODO: add cookie methods: set_cookie, set_cookiejar, get_cookie, get_cookiejar
-
 # set up aliases for exceptions
 URLError = urllib2.URLError
 HTTPError = mechanize.HTTPError
@@ -159,7 +157,7 @@ class TestBrowser(mechanize.Browser):
 
     def check_url(self, regex=None, match=None, url=None):
         if url is None:
-            url = self.get_url()
+            url = self.geturl()
 
         if not match is None and not url == match:
             raise CheckError('expected "%s" got "%s"' % (match, url))
@@ -207,7 +205,7 @@ class TestBrowser(mechanize.Browser):
             kwargs['string'] = self.response().get_data()
 
         if hasattr(pattern, 'search'):
-            match = pattern.search(**kwargs)
+            match = pattern.search(kwargs.pop('string'), **kwargs)
         else:
             match = re.search(pattern, **kwargs)
 
