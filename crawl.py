@@ -1,4 +1,4 @@
-import re
+import re, time
 from collections import deque
 import mechanize
 from test import TestBrowser
@@ -9,15 +9,21 @@ class CrawlBrowser(TestBrowser):
     """Add crawling capabilities to mechanize's Browser. Useful for testing
     all the links of a site.
     """
-    def __init__(self):#, includes=[], excludes=[]):
-        self.cached_responses = {}
-        self.todo_links = deque()
-        #self.includes = [re.compile(include) for include in includes]
-        #self.excludes = [re.compile(exclude) for exclude in excludes]
-        self.crawl_errors = []
+    def __init__(self, domain=None, includes=[], excludes=[], pause=None, max_links=300):
+        self.domain = domain
+        self.includes = [re.compile(include) for include in includes]
+        self.excludes = [re.compile(exclude) for exclude in excludes]
+        self.pause = pause
+
+        self.reset()
 
         TestBrowser.__init__(self)
 
+    def reset(self):
+        self.cached_responses = {}
+        self.todo_links = deque()
+        self.crawl_errors = []
+        
     def links(self, **kwds):
         """Add source attribute to link objects to keep track of the link
         origin.
@@ -46,8 +52,8 @@ class CrawlBrowser(TestBrowser):
     
         return True
 
-    def handle_url(self, url):
-        """
+    def handle_url(self, url, delay=None):
+        """Visit the url or return cached response if visited previously.
         """
         url = url.split('#')[0]
 
@@ -59,8 +65,13 @@ class CrawlBrowser(TestBrowser):
 
         print 'fetching: %s' % url
 
+        if not delay is None:
+            time.sleep(delay)
+
         try:
             self.open(url)
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception, e:
             result = e
         else:
@@ -91,13 +102,7 @@ class CrawlBrowser(TestBrowser):
 
         self.crawl_errors.append((link.source, link, result))
 
-    def crawl(self, start_url=None, includes=[], excludes=[], domain=None, max_links=300):
-        # TODO: add domain filter for link crawling 
-        pass
-
-        self.includes = [re.compile(include) for include in includes]
-        self.excludes = [re.compile(exclude) for exclude in excludes]
-
+    def crawl(self, start_url=None):
         if not start_url:
             start_url = self.geturl()
 
@@ -105,11 +110,11 @@ class CrawlBrowser(TestBrowser):
 
         while self.todo_links:
             link = self.todo_links.popleft()
-            result = self.handle_url(link.absolute_url)
+            result = self.handle_url(link.absolute_url, delay=self.pause)
 
             if isinstance(result, Exception):
                 self.report_error(link, result)
 
-            if len(self.cached_responses) > max_links:
-                raise CrawlError('max link count (%s) exceeded' % max_links)
+            if len(self.cached_responses) > self.max_links:
+                raise CrawlError('max link count (%s) exceeded' % self.max_links)
 
