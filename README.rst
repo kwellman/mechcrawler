@@ -8,10 +8,9 @@ To crawl all the links of a domain::
 
     from mechcrawler import CrawlBrowser
 
-    br = CrawlBrowser()
+    br = CrawlBrowser(domain='domain.com')
 
-    # start a crawl from domain.com
-    br.start_crawl(start_url='http://domain.com', domain='domain.com')
+    br.crawl(start_url='http://domain.com')
 
     print br.errors()
 
